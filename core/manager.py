@@ -2,13 +2,15 @@ import os
 
 from core.exceptions import ConverterError, UnsupportedConversionError
 from core.formats import get_format
-from converters import text_converters
+from converters import text_converters, image_converters
 
 # Таблица преобразований: пара форматов -> функция
 # Когда добавим новые конвертеры, дописываем сюда строку
 CONVERTERS = {
     ("txt", "docx"): text_converters.txt_to_docx,
     ("docx", "txt"): text_converters.docx_to_txt,
+    ("png", "jpg"): image_converters.png_to_jpg,
+    ("jpg", "png"): image_converters.jpg_to_png,
 }
 
 
