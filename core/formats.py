@@ -7,6 +7,9 @@ from core.exceptions import UnknownFormatError
 EXTENSIONS = {
     ".txt": "txt",
     ".docx": "docx",
+    ".png": "png",
+    ".jpg": "jpg",
+    ".jpeg": "jpg",
 }
 
 
