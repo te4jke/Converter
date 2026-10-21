@@ -1,0 +1,4 @@
+pillow
+python-docx
+pypdf
+reportlab
