@@ -3,10 +3,11 @@ import os
 from core.exceptions import UnknownFormatError
 
 # Расширение -> название формата
-# Потом сюда допишем pdf, csv, xlsx, png и остальные как дальше делать будем
+# Потом сюда допишем csv, xlsx и остальные как дальше делать будем
 EXTENSIONS = {
     ".txt": "txt",
     ".docx": "docx",
+    ".pdf": "pdf",
     ".png": "png",
     ".jpg": "jpg",
     ".jpeg": "jpg",
