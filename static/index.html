@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Метроконвертер — карта конвертаций</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="app" id="app">
+
+  <header class="top">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M5 24 L13 12 L21 20 L27 8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="5" cy="24" r="3.4" fill="#fff" stroke="currentColor" stroke-width="2.4"/>
+        <circle cx="27" cy="8" r="3.4" fill="#fff" stroke="currentColor" stroke-width="2.4"/>
+      </svg>
+      <h1>Метро<span>конвертер</span></h1>
+      <span class="stats" id="stats"></span>
+    </div>
+    <nav class="modes" id="modes" role="tablist" aria-label="Режим">
+      <button type="button" role="tab" class="mode on" data-mode="convert" aria-selected="true">Конвертер</button>
+      <button type="button" role="tab" class="mode" data-mode="merge" aria-selected="false">Склейка PDF</button>
+      <button type="button" role="tab" class="mode" data-mode="split" aria-selected="false">Разбить PDF</button>
+      <button type="button" role="tab" class="mode" data-mode="compress" aria-selected="false">Сжатие</button>
+    </nav>
+  </header>
+
+  <main class="stage" id="stage">
+    <div class="map-wrap" id="mapWrap"></div>
+    <div class="hint" id="hint">
+      <b id="hintTitle">Бросьте файл на карту</b>
+      <span id="hintText">Станции подсветятся там, куда он может поехать.<br>Если прямой дороги нет, маршрут проложится через пересадки.</span>
+    </div>
+    <ul class="legend" aria-label="Обозначения">
+      <li><i class="k doc"></i>документы</li>
+      <li><i class="k data"></i>данные</li>
+      <li><i class="k img"></i>картинки</li>
+      <li><i class="k chain"></i>пересадки</li>
+    </ul>
+  </main>
+
+  <section class="dock" id="dock">
+    <div class="intake">
+      <button type="button" class="add" id="add" aria-label="Выбрать файлы">
+        <span class="plus">+</span>
+        <span id="addText">Файлы</span>
+      </button>
+      <ul class="chips" id="files" aria-label="Выбранные файлы"></ul>
+    </div>
+
+    <div class="readout">
+      <div class="status"><i class="led" id="led"></i><span id="statusText">Ждём файл</span></div>
+      <div class="route" id="route"></div>
+      <div class="tools" id="tools" hidden></div>
+    </div>
+
+    <div class="actions">
+      <a class="save" id="save" hidden>Скачать</a>
+      <button class="go" id="go" disabled>Конвертировать</button>
+    </div>
+  </section>
+
+  <div class="veil" id="veil" aria-hidden="true"><span>Отпустите, чтобы загрузить</span></div>
+  <input type="file" id="file" multiple hidden>
+</div>
+<script src="/static/map.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
