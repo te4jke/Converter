@@ -2,3 +2,7 @@ pillow
 python-docx
 pypdf
 reportlab
+pandas
+openpyxl
+flask
+pytesseract

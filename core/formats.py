@@ -2,20 +2,25 @@ import os
 
 from core.exceptions import UnknownFormatError
 
-# Расширение -> название формата
-# Потом сюда допишем csv, xlsx и остальные как дальше делать будем
 EXTENSIONS = {
     ".txt": "txt",
     ".docx": "docx",
-    ".pdf": "pdf",
+    ".html": "html",
+    ".htm": "html",
+    ".csv": "csv",
+    ".xlsx": "xlsx",
+    ".json": "json",
     ".png": "png",
     ".jpg": "jpg",
     ".jpeg": "jpg",
+    ".webp": "webp",
+    ".bmp": "bmp",
+    ".gif": "gif",
+    ".pdf": "pdf",
 }
 
 
 def get_format(filename):
-    # Определяет формат файла по расширению имени
     ext = os.path.splitext(filename)[1].lower()
 
     if ext == "":
@@ -28,5 +33,4 @@ def get_format(filename):
 
 
 def get_extensions():
-    # Все поддерживаемые расширения
     return sorted(EXTENSIONS.keys())

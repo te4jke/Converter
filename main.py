@@ -37,7 +37,8 @@ def main():
         print("Непредвиденная ошибка: " + str(e))
         return 1
 
-    print("Выполнено: " + src_format.upper() + " -> " + dst_format.upper())
+    route = manager.find_route(src_format, dst_format)
+    print("Выполнено: " + " -> ".join(f.upper() for f in route))
     print("Результат сохранён в " + args.target)
     return 0
 
