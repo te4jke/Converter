@@ -25,19 +25,19 @@ def _languages():
         installed = set(pytesseract.get_languages(config=""))
     except Exception:
         installed = set()
-    langs = [l for l in PREFERRED_LANGS if l in installed]
+    langs = [lang for lang in PREFERRED_LANGS if lang in installed]
     return "+".join(langs) if langs else "eng"
 
 
 def image_to_txt(src, dst):
     try:
-        with Image.open(src) as img:
-            img = ImageOps.exif_transpose(img).convert("L")
-            text = pytesseract.image_to_string(img, lang=_languages())
+        with Image.open(src) as image:
+            image = ImageOps.exif_transpose(image).convert("L")
+            text = pytesseract.image_to_string(image, lang=_languages())
     except UnidentifiedImageError:
         raise ConversionFailedError("Файл не является изображением или повреждён")
-    except (OSError, pytesseract.TesseractError) as e:
-        raise ConversionFailedError("Не удалось распознать текст: " + str(e))
+    except (OSError, pytesseract.TesseractError) as error:
+        raise ConversionFailedError("Не удалось распознать текст: " + str(error))
 
     if not text.strip():
         raise ConversionFailedError("На изображении не найден текст")

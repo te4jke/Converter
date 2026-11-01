@@ -20,13 +20,13 @@ class TempDirCase(unittest.TestCase):
     def write(self, name, content):
         mode = "wb" if isinstance(content, bytes) else "w"
         kwargs = {} if mode == "wb" else {"encoding": "utf-8"}
-        with open(self.path(name), mode, **kwargs) as f:
-            f.write(content)
+        with open(self.path(name), mode, **kwargs) as file:
+            file.write(content)
         return self.path(name)
 
     def read(self, name):
-        with open(self.path(name), encoding="utf-8") as f:
-            return f.read()
+        with open(self.path(name), encoding="utf-8") as file:
+            return file.read()
 
 
 def png_bytes(color="red", size=(40, 30)):
@@ -37,8 +37,8 @@ def png_bytes(color="red", size=(40, 30)):
 
 def docx_bytes(*paragraphs, table=None):
     doc = Document()
-    for p in paragraphs:
-        doc.add_paragraph(p)
+    for paragraph in paragraphs:
+        doc.add_paragraph(paragraph)
     if table:
         t = doc.add_table(rows=len(table), cols=len(table[0]))
         for i, row in enumerate(table):

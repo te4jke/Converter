@@ -15,8 +15,8 @@ def csv_to_json(src, dst):
 
     try:
         rows = list(csv.DictReader(io.StringIO(text), dialect=dialect))
-    except csv.Error as e:
-        raise ConversionFailedError("Некорректный CSV: " + str(e))
+    except csv.Error as error:
+        raise ConversionFailedError("Некорректный CSV: " + str(error))
 
     for row in rows:
         row.pop(None, None)
@@ -27,12 +27,12 @@ def csv_to_json(src, dst):
 def json_to_csv(src, dst):
     try:
         data = json.loads(read_text(src))
-    except json.JSONDecodeError as e:
-        raise ConversionFailedError("Некорректный JSON: " + str(e))
+    except json.JSONDecodeError as error:
+        raise ConversionFailedError("Некорректный JSON: " + str(error))
 
     if isinstance(data, dict):
         data = [data]
-    if not isinstance(data, list) or not all(isinstance(r, dict) for r in data):
+    if not isinstance(data, list) or not all(isinstance(record, dict) for record in data):
         raise ConversionFailedError(
             "Для CSV нужен JSON-объект или список объектов"
         )
@@ -47,7 +47,7 @@ def json_to_csv(src, dst):
     writer = csv.writer(out, lineterminator="\n")
     writer.writerow(fields)
     for row in data:
-        writer.writerow([_cell(row.get(k)) for k in fields])
+        writer.writerow([_cell(row.get(field)) for field in fields])
 
     write_text(dst, out.getvalue())
 

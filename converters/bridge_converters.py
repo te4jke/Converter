@@ -24,38 +24,38 @@ def _read_csv_rows(path):
         dialect = csv.excel
     try:
         return list(csv.reader(io.StringIO(text), dialect=dialect))
-    except csv.Error as e:
-        raise ConversionFailedError("Некорректный CSV: " + str(e))
+    except csv.Error as error:
+        raise ConversionFailedError("Некорректный CSV: " + str(error))
 
 
 def _read_json_rows(path):
     try:
         data = json.loads(read_text(path))
-    except json.JSONDecodeError as e:
-        raise ConversionFailedError("Некорректный JSON: " + str(e))
+    except json.JSONDecodeError as error:
+        raise ConversionFailedError("Некорректный JSON: " + str(error))
     if isinstance(data, dict):
         data = [data]
-    if not isinstance(data, list) or not all(isinstance(r, dict) for r in data):
+    if not isinstance(data, list) or not all(isinstance(record, dict) for record in data):
         raise ConversionFailedError("Для таблицы нужен JSON-объект или список объектов")
     fields = []
     for row in data:
         for key in row:
             if key not in fields:
                 fields.append(key)
-    return [fields] + [[_cell(r.get(k)) for k in fields] for r in data]
+    return [fields] + [[_cell(record.get(field)) for field in fields] for record in data]
 
 
 def _read_xlsx_rows(path):
     try:
         df = pd.read_excel(path, engine="openpyxl", header=None)
-    except Exception as e:
-        raise ConversionFailedError("Не удалось прочитать таблицу: " + str(e))
+    except Exception as error:
+        raise ConversionFailedError("Не удалось прочитать таблицу: " + str(error))
     df = df.fillna("")
-    return [[str(c) for c in row] for row in df.values.tolist()]
+    return [[str(cell) for cell in row] for row in df.values.tolist()]
 
 
 def _rows_to_txt(rows):
-    return "\n".join("\t".join(str(c) for c in row) for row in rows) + "\n"
+    return "\n".join("\t".join(str(cell) for cell in row) for row in rows) + "\n"
 
 
 def _rows_to_html(rows):
@@ -64,7 +64,7 @@ def _rows_to_html(rows):
     out = ["<table border=\"1\" cellspacing=\"0\" cellpadding=\"4\">"]
     for i, row in enumerate(rows):
         tag = "th" if i == 0 else "td"
-        cells = "".join("<%s>%s</%s>" % (tag, html.escape(str(c)), tag) for c in row)
+        cells = "".join("<%s>%s</%s>" % (tag, html.escape(str(cell)), tag) for cell in row)
         out.append("<tr>%s</tr>" % cells)
     out.append("</table>")
     return HTML_TEMPLATE.format(title="", body="\n".join(out))
@@ -87,10 +87,10 @@ def txt_to_json(src, dst):
 def json_to_txt(src, dst):
     try:
         data = json.loads(read_text(src))
-    except json.JSONDecodeError as e:
-        raise ConversionFailedError("Некорректный JSON: " + str(e))
+    except json.JSONDecodeError as error:
+        raise ConversionFailedError("Некорректный JSON: " + str(error))
     # Массив строк — обратное преобразование к txt_to_json
-    if isinstance(data, list) and all(isinstance(x, str) for x in data):
+    if isinstance(data, list) and all(isinstance(item, str) for item in data):
         write_text(dst, "\n".join(data) + "\n")
     else:
         write_text(dst, json.dumps(data, ensure_ascii=False, indent=2) + "\n")
@@ -137,8 +137,8 @@ def docx_to_csv(src, dst):
     # Берётся первая таблица документа
     try:
         doc = Document(src)
-    except Exception as e:
-        raise ConversionFailedError("Не удалось открыть документ: " + str(e))
+    except Exception as error:
+        raise ConversionFailedError("Не удалось открыть документ: " + str(error))
     if not doc.tables:
         raise ConversionFailedError("В документе нет таблиц")
     rows = [[cell.text for cell in row.cells] for row in doc.tables[0].rows]
@@ -165,7 +165,8 @@ class _TableExtractor(HTMLParser):
     def handle_endtag(self, tag):
         if self.done:
             return
-        if tag in ("td", "th") and self.depth == 1 and self.cell is not None and self.row is not None:
+        in_row = self.cell is not None and self.row is not None
+        if tag in ("td", "th") and self.depth == 1 and in_row:
             self.row.append(" ".join("".join(self.cell).split()))
             self.cell = None
         elif tag == "tr" and self.depth == 1 and self.row is not None:

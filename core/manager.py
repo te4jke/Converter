@@ -85,16 +85,16 @@ def find_route(src_format, dst_format):
             break
         if cost > best.get(node, cost):
             continue
-        for (a, b) in CONVERTERS:
-            if a != node:
+        for (from_format, to_format) in CONVERTERS:
+            if from_format != node:
                 continue
-            if (a, b) in FINAL_ONLY and b != dst_format:
+            if (from_format, to_format) in FINAL_ONLY and to_format != dst_format:
                 continue
-            new_cost = cost + _step_cost(b)
-            if new_cost < best.get(b, float("inf")):
-                best[b] = new_cost
-                came[b] = node
-                heapq.heappush(queue, (new_cost, b))
+            new_cost = cost + _step_cost(to_format)
+            if new_cost < best.get(to_format, float("inf")):
+                best[to_format] = new_cost
+                came[to_format] = node
+                heapq.heappush(queue, (new_cost, to_format))
 
     if dst_format not in came:
         return None
@@ -106,16 +106,16 @@ def find_route(src_format, dst_format):
 
 def is_lossy_route(route):
     # Цепочка из нескольких шагов, где хотя бы раз текст вытаскивается без оформления
-    return len(route) > 2 and any(f in LOSSY_COST for f in route[1:-1])
+    return len(route) > 2 and any(fmt in LOSSY_COST for fmt in route[1:-1])
 
 
 def _run_route(route, src, dst):
     with tempfile.TemporaryDirectory() as folder:
         current = src
-        for i, (a, b) in enumerate(zip(route, route[1:])):
+        for i, (from_format, to_format) in enumerate(zip(route, route[1:])):
             last = i == len(route) - 2
-            target = dst if last else os.path.join(folder, "step%d.%s" % (i, b))
-            CONVERTERS[(a, b)](current, target)
+            target = dst if last else os.path.join(folder, "step%d.%s" % (i, to_format))
+            CONVERTERS[(from_format, to_format)](current, target)
             current = target
 
 
@@ -176,7 +176,7 @@ def check_target(dst):
 
 def get_routes():
     # {исходный формат: {целевой формат: [цепочка форматов]}}
-    formats = {f for pair in CONVERTERS for f in pair}
+    formats = {fmt for pair in CONVERTERS for fmt in pair}
     result = {}
     for src_format in sorted(formats):
         for dst_format in sorted(formats):
@@ -196,6 +196,6 @@ def get_supported():
         for dst_format, route in sorted(dsts.items()):
             line = src_format.upper() + " -> " + dst_format.upper()
             if len(route) > 2:
-                line += "  (через " + ", ".join(f.upper() for f in route[1:-1]) + ")"
+                line += "  (через " + ", ".join(fmt.upper() for fmt in route[1:-1]) + ")"
             result.append(line)
     return result

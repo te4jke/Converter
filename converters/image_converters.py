@@ -7,36 +7,36 @@ WEBP_QUALITY = 95
 BACKGROUND_COLOR = (255, 255, 255)
 
 
-def _has_alpha(img):
-    return img.mode in ("RGBA", "LA", "PA") or "transparency" in img.info
+def _has_alpha(image):
+    return image.mode in ("RGBA", "LA", "PA") or "transparency" in image.info
 
 
-def _flatten(img):
-    rgba = img.convert("RGBA")
+def _flatten(image):
+    rgba = image.convert("RGBA")
     background = Image.new("RGB", rgba.size, BACKGROUND_COLOR)
     background.paste(rgba, mask=rgba.getchannel("A"))
     return background
 
 
-def _prepare(img, keep_alpha):
-    img = ImageOps.exif_transpose(img)
-    if _has_alpha(img):
-        return img.convert("RGBA") if keep_alpha else _flatten(img)
-    if img.mode in ("1", "L", "RGB") and keep_alpha:
-        return img
-    return img.convert("RGB")
+def _prepare(image, keep_alpha):
+    image = ImageOps.exif_transpose(image)
+    if _has_alpha(image):
+        return image.convert("RGBA") if keep_alpha else _flatten(image)
+    if image.mode in ("1", "L", "RGB") and keep_alpha:
+        return image
+    return image.convert("RGB")
 
 
 def _convert(src, dst, fmt, keep_alpha, **options):
     try:
-        with Image.open(src) as img:
-            _prepare(img, keep_alpha).save(dst, fmt, **options)
+        with Image.open(src) as image:
+            _prepare(image, keep_alpha).save(dst, fmt, **options)
     except UnidentifiedImageError:
         raise ConversionFailedError(
             "Файл не является изображением или повреждён: " + src
         )
-    except (OSError, ValueError) as e:
-        raise ConversionFailedError("Ошибка при обработке изображения: " + str(e))
+    except (OSError, ValueError) as error:
+        raise ConversionFailedError("Ошибка при обработке изображения: " + str(error))
 
 
 def to_jpg(src, dst):

@@ -25,17 +25,17 @@ def txt_to_docx(src, dst):
         doc.save(dst)
     except ValueError:
         raise ConversionFailedError("В тексте есть недопустимые символы")
-    except OSError as e:
-        raise ConversionFailedError("Не удалось сохранить документ: " + str(e))
+    except OSError as error:
+        raise ConversionFailedError("Не удалось сохранить документ: " + str(error))
 
 
 def docx_to_txt(src, dst):
     try:
         doc = Document(src)
-    except Exception as e:
-        raise ConversionFailedError("Не удалось открыть документ: " + str(e))
+    except Exception as error:
+        raise ConversionFailedError("Не удалось открыть документ: " + str(error))
 
-    lines = [p.text for p in doc.paragraphs]
+    lines = [paragraph.text for paragraph in doc.paragraphs]
     for table in doc.tables:
         for row in table.rows:
             lines.append("\t".join(cell.text for cell in row.cells))

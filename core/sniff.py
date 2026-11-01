@@ -26,8 +26,8 @@ def _binary_format(path, head):
         return "pdf"
     if head.startswith(b"PK\x03\x04"):
         try:
-            with zipfile.ZipFile(path) as z:
-                names = z.namelist()
+            with zipfile.ZipFile(path) as archive:
+                names = archive.namelist()
         except zipfile.BadZipFile:
             return None
         if "word/document.xml" in names:
@@ -55,8 +55,8 @@ def _text_format(path, head):
         return "html"
     if stripped[:1] in "{[" and os.path.getsize(path) <= JSON_LIMIT:
         try:
-            with open(path, "r", encoding="utf-8-sig") as f:
-                json.load(f)
+            with open(path, "r", encoding="utf-8-sig") as file:
+                json.load(file)
             return "json"
         except (ValueError, OSError):
             pass
@@ -64,8 +64,8 @@ def _text_format(path, head):
 
 
 def sniff(path):
-    with open(path, "rb") as f:
-        head = f.read(HEAD_SIZE)
+    with open(path, "rb") as file:
+        head = file.read(HEAD_SIZE)
     if not head:
         return None
     return _binary_format(path, head) or _text_format(path, head)
