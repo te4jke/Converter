@@ -20,13 +20,13 @@ class SniffTest(TempDirCase):
 
     def test_docx_and_xlsx_are_told_apart_inside_zip(self):
         self.assertEqual(sniff(self.write("d.bin", docx_bytes("x"))), "docx")
-        with zipfile.ZipFile(self.path("x.bin"), "w") as z:
-            z.writestr("xl/workbook.xml", "<x/>")
+        with zipfile.ZipFile(self.path("x.bin"), "w") as archive:
+            archive.writestr("xl/workbook.xml", "<x/>")
         self.assertEqual(sniff(self.path("x.bin")), "xlsx")
 
     def test_plain_zip_is_unknown(self):
-        with zipfile.ZipFile(self.path("z.bin"), "w") as z:
-            z.writestr("a.txt", "x")
+        with zipfile.ZipFile(self.path("z.bin"), "w") as archive:
+            archive.writestr("a.txt", "x")
         self.assertIsNone(sniff(self.path("z.bin")))
 
     def test_text_variants(self):

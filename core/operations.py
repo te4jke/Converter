@@ -33,10 +33,10 @@ def merge_to_pdf(items, dst):
                     raise ConversionFailedError("PDF защищён паролем")
                 for page in reader.pages:
                     writer.add_page(page)
-            except PyPdfError as e:
-                raise ConversionFailedError("Файл не является PDF или повреждён: " + str(e))
-        with open(dst, "wb") as f:
-            writer.write(f)
+            except PyPdfError as error:
+                raise ConversionFailedError("Файл не является PDF или повреждён: " + str(error))
+        with open(dst, "wb") as file:
+            writer.write(file)
     return len(writer.pages)
 
 
@@ -49,17 +49,17 @@ def split_pdf(src, dst_zip):
         if total < 2:
             raise ConversionFailedError("В PDF всего одна страница, делить нечего")
         width = max(3, len(str(total)))
-        with zipfile.ZipFile(dst_zip, "w", zipfile.ZIP_DEFLATED) as z, \
+        with zipfile.ZipFile(dst_zip, "w", zipfile.ZIP_DEFLATED) as archive, \
                 tempfile.TemporaryDirectory() as folder:
             for i, page in enumerate(reader.pages, 1):
                 part = PdfWriter()
                 part.add_page(page)
                 part_path = os.path.join(folder, "p%d.pdf" % i)
-                with open(part_path, "wb") as f:
-                    part.write(f)
-                z.write(part_path, "page-%s.pdf" % str(i).zfill(width))
-    except PyPdfError as e:
-        raise ConversionFailedError("Файл не является PDF или повреждён: " + str(e))
+                with open(part_path, "wb") as file:
+                    part.write(file)
+                archive.write(part_path, "page-%s.pdf" % str(i).zfill(width))
+    except PyPdfError as error:
+        raise ConversionFailedError("Файл не является PDF или повреждён: " + str(error))
     return total
 
 
@@ -70,26 +70,26 @@ def compress_image(src, dst, fmt, quality, max_side=0):
     quality = max(1, min(100, int(quality)))
 
     try:
-        with Image.open(src) as img:
-            img = ImageOps.exif_transpose(img)
-            if max_side and max(img.size) > max_side:
-                img.thumbnail((max_side, max_side), Image.LANCZOS)
+        with Image.open(src) as image:
+            image = ImageOps.exif_transpose(image)
+            if max_side and max(image.size) > max_side:
+                image.thumbnail((max_side, max_side), Image.LANCZOS)
 
             if fmt == "jpg":
-                img.convert("RGB").save(dst, "JPEG", quality=quality,
+                image.convert("RGB").save(dst, "JPEG", quality=quality,
                                         optimize=True, progressive=True)
             elif fmt == "webp":
-                img.save(dst, "WEBP", quality=quality, method=6)
+                image.save(dst, "WEBP", quality=quality, method=6)
             else:
                 # PNG без потерь не ужать, поэтому при низком качестве режем палитру
                 if quality < 90:
                     colors = max(16, int(256 * quality / 100))
-                    has_alpha = img.mode in ("RGBA", "LA") or "transparency" in img.info
-                    rgba = img.convert("RGBA")
-                    img = rgba.quantize(colors=colors, method=Image.FASTOCTREE) if has_alpha \
-                        else img.convert("RGB").quantize(colors=colors)
-                img.save(dst, "PNG", optimize=True)
+                    has_alpha = image.mode in ("RGBA", "LA") or "transparency" in image.info
+                    rgba = image.convert("RGBA")
+                    image = rgba.quantize(colors=colors, method=Image.FASTOCTREE) if has_alpha \
+                        else image.convert("RGB").quantize(colors=colors)
+                image.save(dst, "PNG", optimize=True)
     except UnidentifiedImageError:
         raise ConversionFailedError("Файл не является изображением или повреждён")
-    except (OSError, ValueError) as e:
-        raise ConversionFailedError("Ошибка при сжатии: " + str(e))
+    except (OSError, ValueError) as error:
+        raise ConversionFailedError("Ошибка при сжатии: " + str(error))

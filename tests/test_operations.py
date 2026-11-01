@@ -10,9 +10,9 @@ from tests.helpers import TempDirCase, pdf_pages, png_bytes
 
 class MergeTest(TempDirCase):
     def test_merges_mixed_files_in_order(self):
-        img = self.write("a.png", png_bytes())
+        image = self.write("a.png", png_bytes())
         txt = self.write("b.txt", "строка")
-        pages = operations.merge_to_pdf([(img, "png"), (txt, "txt")], self.path("m.pdf"))
+        pages = operations.merge_to_pdf([(image, "png"), (txt, "txt")], self.path("m.pdf"))
         self.assertEqual(pages, 2)
         self.assertEqual(pdf_pages(self.path("m.pdf")), 2)
 
@@ -43,8 +43,8 @@ class SplitTest(TempDirCase):
              (self.write("c.txt", "c"), "txt")], merged)
         total = operations.split_pdf(merged, self.path("p.zip"))
         self.assertEqual(total, 3)
-        with zipfile.ZipFile(self.path("p.zip")) as z:
-            self.assertEqual(z.namelist(), ["page-001.pdf", "page-002.pdf", "page-003.pdf"])
+        with zipfile.ZipFile(self.path("p.zip")) as archive:
+            self.assertEqual(archive.namelist(), ["page-001.pdf", "page-002.pdf", "page-003.pdf"])
 
     def test_single_page_is_rejected(self):
         with self.assertRaises(ConversionFailedError):
@@ -68,20 +68,20 @@ class CompressTest(TempDirCase):
 
     def test_max_side_resizes(self):
         operations.compress_image(self.noisy_jpg(), self.path("s.jpg"), "jpg", 80, max_side=200)
-        with Image.open(self.path("s.jpg")) as img:
-            self.assertEqual(max(img.size), 200)
+        with Image.open(self.path("s.jpg")) as image:
+            self.assertEqual(max(image.size), 200)
 
     def test_smaller_image_is_not_upscaled(self):
         operations.compress_image(self.noisy_jpg(), self.path("s.jpg"), "jpg", 80, max_side=5000)
-        with Image.open(self.path("s.jpg")) as img:
-            self.assertEqual(img.size, (800, 600))
+        with Image.open(self.path("s.jpg")) as image:
+            self.assertEqual(image.size, (800, 600))
 
     def test_png_and_webp_are_supported(self):
         src = self.write("a.png", png_bytes(size=(100, 100)))
         for fmt in ("png", "webp"):
             operations.compress_image(src, self.path("s." + fmt), fmt, 50)
-            with Image.open(self.path("s." + fmt)) as img:
-                self.assertEqual(img.format, fmt.upper())
+            with Image.open(self.path("s." + fmt)) as image:
+                self.assertEqual(image.format, fmt.upper())
 
     def test_quality_is_clamped(self):
         src = self.write("a.png", png_bytes())

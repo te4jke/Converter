@@ -38,8 +38,8 @@ def pdf_to_txt(src, dst):
             pages.append(page.extract_text() or "")
     except ConversionFailedError:
         raise
-    except (PyPdfError, OSError) as e:
-        raise ConversionFailedError("Файл не является PDF или повреждён: " + str(e))
+    except (PyPdfError, OSError) as error:
+        raise ConversionFailedError("Файл не является PDF или повреждён: " + str(error))
 
     text = "\n".join(pages)
 
@@ -48,17 +48,17 @@ def pdf_to_txt(src, dst):
             "В PDF не найдено текста (возможно, это скан или картинки)"
         )
 
-    f = open(dst, "w", encoding="utf-8")
-    f.write(text)
-    f.close()
+    file = open(dst, "w", encoding="utf-8")
+    file.write(text)
+    file.close()
 
 
 def txt_to_pdf(src, dst):
     # Каждая строка txt-файла становится отдельным абзацем
     try:
-        f = open(src, "r", encoding="utf-8")
-        lines = f.read().splitlines()
-        f.close()
+        file = open(src, "r", encoding="utf-8")
+        lines = file.read().splitlines()
+        file.close()
     except UnicodeDecodeError:
         raise ConversionFailedError(
             "Файл не в кодировке UTF-8, прочитать не удалось"
@@ -95,5 +95,5 @@ def txt_to_pdf(src, dst):
             bottomMargin=PAGE_MARGIN,
         )
         doc.build(story)
-    except OSError as e:
-        raise ConversionFailedError("Ошибка при создании PDF: " + str(e))
+    except OSError as error:
+        raise ConversionFailedError("Ошибка при создании PDF: " + str(error))

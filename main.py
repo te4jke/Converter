@@ -30,15 +30,15 @@ def main():
 
     try:
         src_format, dst_format = manager.convert(args.source, args.target)
-    except ConverterError as e:
-        print("Ошибка: " + str(e))
+    except ConverterError as error:
+        print("Ошибка: " + str(error))
         return 1
-    except Exception as e:
-        print("Непредвиденная ошибка: " + str(e))
+    except Exception as error:
+        print("Непредвиденная ошибка: " + str(error))
         return 1
 
     route = manager.find_route(src_format, dst_format)
-    print("Выполнено: " + " -> ".join(f.upper() for f in route))
+    print("Выполнено: " + " -> ".join(fmt.upper() for fmt in route))
     print("Результат сохранён в " + args.target)
     return 0
 

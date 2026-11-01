@@ -90,8 +90,8 @@ def attach(response, filename, **headers):
         "attachment; filename*=UTF-8''" + quote(filename)
     )
     for key, value in headers.items():
-        response.headers["X-" + key.replace("_", "-")] = str(value)
-    expose = ["Content-Disposition"] + ["X-" + k.replace("_", "-") for k in headers]
+        response.headers["X-" + key.replace("_", "-").title()] = str(value)
+    expose = ["Content-Disposition"] + ["X-" + key.replace("_", "-").title() for key in headers]
     response.headers["Access-Control-Expose-Headers"] = ", ".join(expose)
     return response
 
@@ -101,8 +101,8 @@ def fail(message, status=400):
 
 
 def read_result(path, mime=None):
-    with open(path, "rb") as f:
-        data = io.BytesIO(f.read())
+    with open(path, "rb") as file:
+        data = io.BytesIO(file.read())
     return send_file(data, mimetype=mime or mimetypes.guess_type(path)[0]
                      or "application/octet-stream")
 
@@ -123,8 +123,8 @@ def convert():
         try:
             src, fmt, note = save_upload(upload, folder, 0)
             manager.convert(src, dst)
-        except ConverterError as e:
-            return fail(public_message(e, upload.filename, src or "", dst))
+        except ConverterError as error:
+            return fail(public_message(error, upload.filename, src or "", dst))
         except Exception:
             app.logger.exception("conversion crashed")
             return fail("Внутренняя ошибка при конвертации", 500)
@@ -133,7 +133,7 @@ def convert():
         response = read_result(dst)
 
     return attach(response, stem_of(upload.filename) + "." + target,
-                  Route=">".join(route), Detected=fmt, Note=quote(note))
+                  route=">".join(route), detected=fmt, note=quote(note))
 
 
 def convert_one(job):
@@ -142,8 +142,8 @@ def convert_one(job):
     try:
         manager.convert(src, dst)
         return upload_name, dst_name, dst, None
-    except ConverterError as e:
-        return upload_name, dst_name, None, public_message(e, upload_name, src, dst)
+    except ConverterError as error:
+        return upload_name, dst_name, None, public_message(error, upload_name, src, dst)
     except Exception:
         app.logger.exception("batch item crashed")
         return upload_name, dst_name, None, "Внутренняя ошибка"
@@ -151,10 +151,10 @@ def convert_one(job):
 
 def unique_name(name, used):
     base, ext = os.path.splitext(name)
-    candidate, n = name, 1
+    candidate, number = name, 1
     while candidate.lower() in used:
-        n += 1
-        candidate = "%s (%d)%s" % (base, n, ext)
+        number += 1
+        candidate = "%s (%d)%s" % (base, number, ext)
     used.add(candidate.lower())
     return candidate
 
@@ -176,8 +176,8 @@ def batch():
         for i, upload in enumerate(uploads):
             try:
                 src, fmt, _ = save_upload(upload, folder, i)
-            except ConverterError as e:
-                problems.append((clean_name(upload.filename), str(e)))
+            except ConverterError as error:
+                problems.append((clean_name(upload.filename), str(error)))
                 continue
             dst_name = unique_name(stem_of(upload.filename) + "." + target, used)
             jobs.append((clean_name(upload.filename), src,
@@ -188,25 +188,25 @@ def batch():
 
         buffer = io.BytesIO()
         done = 0
-        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as z:
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
             for upload_name, dst_name, dst, error in results:
                 if error:
                     problems.append((upload_name, error))
                 else:
-                    z.write(dst, dst_name)
+                    archive.write(dst, dst_name)
                     done += 1
             if problems:
                 lines = ["%s: %s" % item for item in problems]
-                z.writestr("ОШИБКИ.txt", "\n".join(lines) + "\n")
+                archive.writestr("ОШИБКИ.txt", "\n".join(lines) + "\n")
 
     if done == 0:
         return fail("Ни один файл не удалось сконвертировать: "
-                    + "; ".join("%s — %s" % p for p in problems[:3]))
+                    + "; ".join("%s — %s" % problem for problem in problems[:3]))
 
     buffer.seek(0)
     response = send_file(buffer, mimetype="application/zip")
     return attach(response, "converted_%s.zip" % target,
-                  Done=done, Failed=len(problems))
+                  done=done, failed=len(problems))
 
 
 @app.route("/api/merge", methods=["POST"])
@@ -224,18 +224,18 @@ def merge():
             for i, upload in enumerate(uploads):
                 try:
                     path, fmt, _ = save_upload(upload, folder, i)
-                except ConverterError as e:
-                    raise ConverterError("%s: %s" % (clean_name(upload.filename), e))
+                except ConverterError as error:
+                    raise ConverterError("%s: %s" % (clean_name(upload.filename), error))
                 items.append((path, fmt))
             pages = operations.merge_to_pdf(items, dst)
-        except ConverterError as e:
-            return fail(str(e))
+        except ConverterError as error:
+            return fail(str(error))
         except Exception:
             app.logger.exception("merge crashed")
             return fail("Внутренняя ошибка при склейке", 500)
         response = read_result(dst, "application/pdf")
 
-    return attach(response, "merged.pdf", Pages=pages)
+    return attach(response, "merged.pdf", pages=pages)
 
 
 @app.route("/api/split", methods=["POST"])
@@ -251,14 +251,14 @@ def split():
             if fmt != "pdf":
                 raise ConverterError("Делить можно только PDF")
             pages = operations.split_pdf(src, dst)
-        except ConverterError as e:
-            return fail(str(e))
+        except ConverterError as error:
+            return fail(str(error))
         except Exception:
             app.logger.exception("split crashed")
             return fail("Внутренняя ошибка при разбиении", 500)
         response = read_result(dst, "application/zip")
 
-    return attach(response, stem_of(upload.filename) + "_pages.zip", Pages=pages)
+    return attach(response, stem_of(upload.filename) + "_pages.zip", pages=pages)
 
 
 @app.route("/api/compress", methods=["POST"])
@@ -277,8 +277,8 @@ def compress():
             src, fmt, _ = save_upload(upload, folder, 0)
             dst = os.path.join(folder, "small." + fmt)
             operations.compress_image(src, dst, fmt, quality, max_side)
-        except ConverterError as e:
-            return fail(str(e))
+        except ConverterError as error:
+            return fail(str(error))
         except Exception:
             app.logger.exception("compress crashed")
             return fail("Внутренняя ошибка при сжатии", 500)
@@ -286,7 +286,7 @@ def compress():
         response = read_result(dst)
 
     return attach(response, stem_of(upload.filename) + "_small." + fmt,
-                  Before=before, After=after)
+                  before=before, after=after)
 
 
 @app.errorhandler(RequestEntityTooLarge)
